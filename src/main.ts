@@ -3,6 +3,12 @@ import { context } from '@actions/github';
 
 const { setFailed, setOutput, getInput } = core;
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+const escapeRegExp = (str: string) => {
+  // eslint-disable-next-line no-useless-escape
+  return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
+};
+
 async function run(): Promise<void> {
   try {
     const { pull_request } = context.payload;
@@ -15,7 +21,10 @@ async function run(): Promise<void> {
 
     const { body = '' } = pull_request ?? {};
 
-    const jiraRegexp = new RegExp(`(?:<jira_ticket>${jiraHost})`, 'gmi');
+    const jiraRegexp = new RegExp(
+      `(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`,
+      'gmi',
+    );
 
     const matches = jiraRegexp.exec(body);
 
