@@ -37,16 +37,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
+const { setFailed, setOutput, getInput } = core;
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const { pull_request } = github_1.context.payload;
+            if (!pull_request) {
+                setFailed('This action only works on pull requests');
+            }
+            const jiraHost = getInput('jira_host');
+            // const projectKeys = getInput('project_keys');
+            const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
+            const jiraRegexp = new RegExp(`(?:<jira_ticket>${jiraHost})`, 'gmi');
+            const matches = jiraRegexp.exec(body);
             // eslint-disable-next-line no-console
-            console.log(`Hi ${JSON.stringify(github_1.context.payload, null, 2)}`);
-            core.setOutput('time', new Date().toTimeString());
+            console.log(`${(_a = matches === null || matches === void 0 ? void 0 : matches.groups) === null || _a === void 0 ? void 0 : _a.jira_ticket}`);
+            setOutput('time', new Date().toTimeString());
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(error.message);
+                setFailed(error.message);
         }
     });
 }

@@ -1,11 +1,17 @@
 name: 'Jira Telegram'
 description: 'Link Jira tickets without compromising Pull Request Titles.'
 author: 'therynamo'
-# inputs:
-#   milliseconds: # change this
-#     required: true
-#     description: 'input description here'
-#     default: 'default value if applicable'
+inputs:
+  jira_host:
+    required: true
+    description: "Hostname for where your team's Jira instance is hosted"
+    default: 'https://jira.mycompany.com'
+  project_keys:
+    required: false
+    description: "A comma separated list of project keys to be matched on in a pull request body. (E.g. https://jira.mycompany.com/browse/PROJ-123 - you'd list PROJ in this string"
+  ignored_project_keys:
+    required: false
+    description: "A comma separated list of project keys to not be matched on in a pull request body. (E.g. https://jira.mycompany.com/browse/PROJ-123 - you'd list PROJ in this string"
 runs:
   using: 'node12'
   main: 'dist/index.js'
