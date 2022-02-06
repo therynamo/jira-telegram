@@ -4,6 +4,9 @@
   "private": true,
   "description": "TypeScript template action",
   "main": "lib/main.js",
+  "engines": {
+    "node": "16 || 17"
+  },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
@@ -25,7 +28,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.6.0"
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.10.5",
