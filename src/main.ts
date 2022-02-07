@@ -88,7 +88,7 @@ export async function run(): Promise<void> {
 
       await createEmptyCommitWithMessage({
         ...context.repo,
-        message: filteredTicketIds[0] ?? '',
+        message: `${filteredTicketIds[0]} [actions skip]` ?? '[actions skip]',
         branch: pull_request?.head?.ref,
         octokit: octoKit,
       });
@@ -103,7 +103,7 @@ export async function run(): Promise<void> {
           await sleep(500);
           await createEmptyCommitWithMessage({
             ...context.repo,
-            message: ticketId ?? '',
+            message: `${ticketId} [actions skip]` ?? '[actions skip]',
             branch: pull_request?.head?.ref,
             octokit: octoKit,
           });
