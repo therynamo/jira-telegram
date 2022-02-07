@@ -63,7 +63,7 @@ export async function run(): Promise<void> {
       return;
     }
 
-    const tree = await octoKit.rest.git.getTree({
+    const { data: tree } = await octoKit.rest.git.getTree({
       ...context.repo,
       tree_sha: context.payload?.after,
     });
@@ -71,8 +71,7 @@ export async function run(): Promise<void> {
     await octoKit.rest.git.createCommit({
       ...context.repo,
       message: filteredTicketIds[0] ?? '',
-      // @ts-expect-error asdf
-      tree: tree.data.tree,
+      tree: tree.sha,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
