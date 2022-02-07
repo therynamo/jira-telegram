@@ -34,5 +34,6 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     repo,
     ref: `heads/${branch}`,
     sha: newCommit.data.sha,
+    force: true,
   });
 };
