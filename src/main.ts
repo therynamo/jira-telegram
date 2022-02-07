@@ -71,8 +71,8 @@ export async function run(): Promise<void> {
     await octoKit.rest.git.createCommit({
       ...context.repo,
       message: filteredTicketIds[0] ?? '',
-      // @ts-expect-error idk
-      tree: tree.data,
+      // @ts-expect-error asdf
+      tree: tree.data.tree,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
