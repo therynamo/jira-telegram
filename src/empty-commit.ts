@@ -10,10 +10,12 @@ type Props = {
 };
 
 export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branch, message }: Props) => {
+  info('STARTING!!!!!!!!!!!!!!!!!!!!!');
+
   const newBranchRef = await octokit.rest.git.getRef({
     owner,
     repo,
-    ref: branch,
+    ref: `heads/${branch}`,
   });
   info(`${newBranchRef}`);
 

@@ -20,6 +20,7 @@ exports.createEmptyCommitWithMessage = void 0;
 const core_1 = __nccwpck_require__(2186);
 const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
+    (0, core_1.info)('STARTING!!!!!!!!!!!!!!!!!!!!!');
     const newBranchRef = yield octokit.rest.git.getRef({
         owner,
         repo,
