@@ -86,7 +86,9 @@ function run() {
                 return;
             }
             const tree = yield octoKit.rest.git.getTree(Object.assign(Object.assign({}, github_1.context.repo), { tree_sha: (_b = github_1.context.payload) === null || _b === void 0 ? void 0 : _b.after }));
-            yield octoKit.rest.git.createCommit(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', tree: tree.data.sha }));
+            yield octoKit.rest.git.createCommit(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', 
+                // @ts-expect-error idk
+                tree: tree.data }));
         }
         catch (error) {
             if (error instanceof Error)
