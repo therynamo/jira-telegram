@@ -66,6 +66,20 @@ export async function run(): Promise<void> {
       return;
     }
 
+    const { data: commits } = await octoKit.rest.pulls.listCommits({
+      ...context.repo,
+      pull_number: pull_request?.number ?? 0,
+    });
+
+    const hasCommittedAlready = commits?.some((commit) => {
+      return filteredTicketIds?.includes(commit.commit.message);
+    });
+
+    if (hasCommittedAlready) {
+      core.info('Telegram has already run successfully - skipping commit.');
+      return;
+    }
+
     await createEmptyCommitWithMessage({
       ...context.repo,
       message: filteredTicketIds[0] ?? '',

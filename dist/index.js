@@ -2,7 +2,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 1170:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
 
@@ -17,23 +17,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createEmptyCommitWithMessage = void 0;
-const core_1 = __nccwpck_require__(2186);
 const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
-    (0, core_1.info)('STARTING!!!!!!!!!!!!!!!!!!!!!');
-    (0, core_1.info)(branch);
     const newBranchRef = yield octokit.rest.git.getRef({
         owner,
         repo,
         ref: `heads/${branch}`,
     });
-    (0, core_1.info)(`${newBranchRef}`);
     const currentCommit = yield octokit.rest.git.getCommit({
         owner,
         repo,
         commit_sha: (_b = (_a = newBranchRef === null || newBranchRef === void 0 ? void 0 : newBranchRef.data) === null || _a === void 0 ? void 0 : _a.object) === null || _b === void 0 ? void 0 : _b.sha,
     });
-    (0, core_1.info)(`${currentCommit}`);
     const newCommit = yield octokit.rest.git.createCommit({
         owner,
         repo,
@@ -41,7 +36,6 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         tree: (_d = (_c = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _c === void 0 ? void 0 : _c.tree) === null || _d === void 0 ? void 0 : _d.sha,
         parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
     });
-    (0, core_1.info)(`${newCommit}`);
     yield octokit.rest.git.updateRef({
         owner,
         repo,
@@ -99,7 +93,7 @@ const escapeRegExp = (str) => {
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 function run() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -139,7 +133,15 @@ function run() {
                 core.info('No tickets were found. Exiting gracefully...');
                 return;
             }
-            yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_b = filteredTicketIds[0]) !== null && _b !== void 0 ? _b : '', branch: (_c = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _c === void 0 ? void 0 : _c.ref, octokit: octoKit }));
+            const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0 }));
+            const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
+                return filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.includes(commit.commit.message);
+            });
+            if (hasCommittedAlready) {
+                core.info('Telegram has already run successfully - skipping commit.');
+                return;
+            }
+            yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
         }
         catch (error) {
             if (error instanceof Error)
