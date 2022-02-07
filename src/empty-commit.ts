@@ -1,4 +1,5 @@
 import type { getOctokit } from '@actions/github';
+import { info } from '@actions/core';
 
 type Props = {
   owner: string;
@@ -14,14 +15,14 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     repo,
     ref: `refs/heads/${branch}`,
   });
-  console.log({ newBranchRef });
+  info(`${newBranchRef}`);
 
   const currentCommit = await octokit.rest.git.getCommit({
     owner,
     repo,
     commit_sha: newBranchRef?.data?.object?.sha,
   });
-  console.log({ currentCommit });
+  info(`${currentCommit}`);
 
   const newCommit = await octokit.rest.git.createCommit({
     owner,
@@ -30,7 +31,7 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     tree: currentCommit?.data?.tree?.sha,
     parents: [currentCommit?.data?.sha],
   });
-  console.log({ newCommit });
+  info(`${newCommit}`);
 
   await octokit.rest.git.updateRef({
     owner,

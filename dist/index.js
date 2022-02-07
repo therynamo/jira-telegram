@@ -2,7 +2,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 1170:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -17,6 +17,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createEmptyCommitWithMessage = void 0;
+const core_1 = __nccwpck_require__(2186);
 const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
     const newBranchRef = yield octokit.rest.git.getRef({
@@ -24,13 +25,13 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         repo,
         ref: `refs/heads/${branch}`,
     });
-    console.log({ newBranchRef });
+    (0, core_1.info)(`${newBranchRef}`);
     const currentCommit = yield octokit.rest.git.getCommit({
         owner,
         repo,
         commit_sha: (_b = (_a = newBranchRef === null || newBranchRef === void 0 ? void 0 : newBranchRef.data) === null || _a === void 0 ? void 0 : _a.object) === null || _b === void 0 ? void 0 : _b.sha,
     });
-    console.log({ currentCommit });
+    (0, core_1.info)(`${currentCommit}`);
     const newCommit = yield octokit.rest.git.createCommit({
         owner,
         repo,
@@ -38,7 +39,7 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         tree: (_d = (_c = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _c === void 0 ? void 0 : _c.tree) === null || _d === void 0 ? void 0 : _d.sha,
         parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
     });
-    console.log({ newCommit });
+    (0, core_1.info)(`${newCommit}`);
     yield octokit.rest.git.updateRef({
         owner,
         repo,
