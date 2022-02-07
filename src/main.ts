@@ -10,10 +10,6 @@ const escapeRegExp = (str: string) => {
   return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 
-const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
 export async function run(): Promise<void> {
   try {
     const { pull_request } = context.payload;
@@ -99,17 +95,6 @@ export async function run(): Promise<void> {
         const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
 
         if (!hasCommittedAlready) {
-          // Sleep so the API has some time to catch up in case there are multiple commits
-          core.info(`Sleeping 1 second ${ticketId}`);
-          const now = new Date();
-
-          await sleep(10000);
-
-          const then = new Date();
-
-          core.info(`Time slept ${(then.getTime() - now.getTime()) / 1000}s`);
-          core.info(`Creating emtpy commit ${ticketId}`);
-
           try {
             await createEmptyCommitWithMessage({
               ...context.repo,
