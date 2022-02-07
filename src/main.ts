@@ -103,7 +103,7 @@ export async function run(): Promise<void> {
           core.info(`Sleeping 1 second ${ticketId}`);
           const now = new Date();
 
-          await sleep(3000);
+          await sleep(10000);
 
           const then = new Date();
 

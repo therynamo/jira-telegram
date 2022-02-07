@@ -156,7 +156,7 @@ function run() {
                     // Sleep so the API has some time to catch up in case there are multiple commits
                     core.info(`Sleeping 1 second ${ticketId}`);
                     const now = new Date();
-                    yield sleep(3000);
+                    yield sleep(10000);
                     const then = new Date();
                     core.info(`Time slept ${(then.getTime() - now.getTime()) / 1000}s`);
                     core.info(`Creating emtpy commit ${ticketId}`);
