@@ -154,10 +154,15 @@ function run() {
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
                 if (!hasCommittedAlready) {
                     // Sleep so the API has some time to catch up in case there are multiple commits
-                    core.info('Sleeping 1 second');
+                    core.info(`Sleeping 1 second ${ticketId}`);
                     yield sleep(1000);
-                    core.info('Creating emtpy commit');
-                    yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${ticketId} [actions skip]`) !== null && _e !== void 0 ? _e : '[actions skip]', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
+                    core.info(`Creating emtpy commit ${ticketId}`);
+                    try {
+                        yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${ticketId} [actions skip]`) !== null && _e !== void 0 ? _e : '[actions skip]', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
+                    }
+                    catch (error) {
+                        setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
+                    }
                 }
             })));
         }

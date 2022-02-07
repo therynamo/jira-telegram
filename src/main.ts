@@ -100,15 +100,22 @@ export async function run(): Promise<void> {
 
         if (!hasCommittedAlready) {
           // Sleep so the API has some time to catch up in case there are multiple commits
-          core.info('Sleeping 1 second');
+          core.info(`Sleeping 1 second ${ticketId}`);
+
           await sleep(1000);
-          core.info('Creating emtpy commit');
-          await createEmptyCommitWithMessage({
-            ...context.repo,
-            message: `${ticketId} [actions skip]` ?? '[actions skip]',
-            branch: pull_request?.head?.ref,
-            octokit: octoKit,
-          });
+
+          core.info(`Creating emtpy commit ${ticketId}`);
+
+          try {
+            await createEmptyCommitWithMessage({
+              ...context.repo,
+              message: `${ticketId} [actions skip]` ?? '[actions skip]',
+              branch: pull_request?.head?.ref,
+              octokit: octoKit,
+            });
+          } catch (error) {
+            setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
+          }
         }
       }),
     );
