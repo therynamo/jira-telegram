@@ -85,7 +85,7 @@ function run() {
                 core.info('No tickets were found. Exiting gracefully...');
                 return;
             }
-            const { data: tree } = yield octoKit.rest.git.getTree(Object.assign(Object.assign({}, github_1.context.repo), { tree_sha: (_b = github_1.context.payload) === null || _b === void 0 ? void 0 : _b.after }));
+            const { data: tree } = yield octoKit.rest.git.getTree(Object.assign(Object.assign({}, github_1.context.repo), { tree_sha: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _b === void 0 ? void 0 : _b.sha }));
             yield octoKit.rest.git.createCommit(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', tree: tree.sha }));
         }
         catch (error) {

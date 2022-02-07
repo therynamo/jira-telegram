@@ -65,7 +65,7 @@ export async function run(): Promise<void> {
 
     const { data: tree } = await octoKit.rest.git.getTree({
       ...context.repo,
-      tree_sha: context.payload?.after,
+      tree_sha: pull_request?.head?.sha,
     });
 
     await octoKit.rest.git.createCommit({
