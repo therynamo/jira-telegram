@@ -45,7 +45,7 @@ export async function run(): Promise<void> {
 
     let filteredTicketIds = ticketIds;
 
-    if (ignoredKeys.length && projectKeys.length) {
+    if (!!ignoredKeys.length && !!projectKeys.length) {
       setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
       return;
     }
