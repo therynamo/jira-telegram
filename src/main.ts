@@ -18,6 +18,7 @@ export async function run(): Promise<void> {
       setFailed('This action only works on pull requests');
     }
     const jiraHost = getInput('jira_host');
+    const firstTicketOnly = getInput('first_ticket_only');
     const ingoredKeysInput = getInput('ignored_project_keys');
     const projectKeysInput = getInput('ignored_project_keys');
 
@@ -71,21 +72,38 @@ export async function run(): Promise<void> {
       pull_number: pull_request?.number ?? 0,
     });
 
-    const hasCommittedAlready = commits?.some((commit) => {
-      return filteredTicketIds?.includes(commit.commit.message);
-    });
+    if (firstTicketOnly) {
+      const hasCommittedAlready = commits?.some((commit) => {
+        return filteredTicketIds?.includes(commit.commit.message);
+      });
 
-    if (hasCommittedAlready) {
-      core.info('Telegram has already run successfully - skipping commit.');
-      return;
+      if (hasCommittedAlready) {
+        core.info('Telegram has already been sent - skipping commit.');
+        return;
+      }
+
+      await createEmptyCommitWithMessage({
+        ...context.repo,
+        message: filteredTicketIds[0] ?? '',
+        branch: pull_request?.head?.ref,
+        octokit: octoKit,
+      });
     }
 
-    await createEmptyCommitWithMessage({
-      ...context.repo,
-      message: filteredTicketIds[0] ?? '',
-      branch: pull_request?.head?.ref,
-      octokit: octoKit,
-    });
+    await Promise.all(
+      filteredTicketIds.map(async (ticketId) => {
+        const hasCommittedAlready = commits?.some((commit) => commit.commit.message.includes(ticketId ?? ''));
+
+        if (!hasCommittedAlready) {
+          await createEmptyCommitWithMessage({
+            ...context.repo,
+            message: ticketId ?? '',
+            branch: pull_request?.head?.ref,
+            octokit: octoKit,
+          });
+        }
+      }),
+    );
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
   }

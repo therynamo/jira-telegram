@@ -101,6 +101,7 @@ function run() {
                 setFailed('This action only works on pull requests');
             }
             const jiraHost = getInput('jira_host');
+            const firstTicketOnly = getInput('first_ticket_only');
             const ingoredKeysInput = getInput('ignored_project_keys');
             const projectKeysInput = getInput('ignored_project_keys');
             const projectKeys = projectKeysInput.split(',');
@@ -134,14 +135,23 @@ function run() {
                 return;
             }
             const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0 }));
-            const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
-                return filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.includes(commit.commit.message);
-            });
-            if (hasCommittedAlready) {
-                core.info('Telegram has already run successfully - skipping commit.');
-                return;
+            if (firstTicketOnly) {
+                const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
+                    return filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.includes(commit.commit.message);
+                });
+                if (hasCommittedAlready) {
+                    core.info('Telegram has already been sent - skipping commit.');
+                    return;
+                }
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
             }
-            yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
+            yield Promise.all(filteredTicketIds.map((ticketId) => __awaiter(this, void 0, void 0, function* () {
+                var _e;
+                const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => commit.commit.message.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''));
+                if (!hasCommittedAlready) {
+                    yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: ticketId !== null && ticketId !== void 0 ? ticketId : '', branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit: octoKit }));
+                }
+            })));
         }
         catch (error) {
             if (error instanceof Error)
