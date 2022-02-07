@@ -94,6 +94,8 @@ export async function run(): Promise<void> {
       });
     }
 
+    core.info(`${JSON.stringify(commits, null, 2)}`);
+
     await Promise.all(
       filteredTicketIds.map(async (ticketId) => {
         const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));

@@ -149,6 +149,7 @@ function run() {
                 }
                 yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]} [actions skip]`) !== null && _c !== void 0 ? _c : '[actions skip]', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
             }
+            core.info(`${JSON.stringify(commits, null, 2)}`);
             yield Promise.all(filteredTicketIds.map((ticketId) => __awaiter(this, void 0, void 0, function* () {
                 var _e, _f;
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
