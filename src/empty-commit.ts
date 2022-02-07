@@ -13,7 +13,7 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
   const newBranchRef = await octokit.rest.git.getRef({
     owner,
     repo,
-    ref: `refs/heads/${branch}`,
+    ref: branch,
   });
   info(`${newBranchRef}`);
 

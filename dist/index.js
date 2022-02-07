@@ -23,7 +23,7 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
     const newBranchRef = yield octokit.rest.git.getRef({
         owner,
         repo,
-        ref: `refs/heads/${branch}`,
+        ref: branch,
     });
     (0, core_1.info)(`${newBranchRef}`);
     const currentCommit = yield octokit.rest.git.getCommit({
