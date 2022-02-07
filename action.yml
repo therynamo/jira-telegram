@@ -2,6 +2,9 @@ name: 'Jira Telegram'
 description: 'Link Jira tickets without compromising Pull Request Titles.'
 author: 'therynamo'
 inputs:
+  github_token:
+    required: true
+    description: 'Authorized github token to read and write to pull requests'
   jira_host:
     required: true
     description: "Hostname for where your team's Jira instance is hosted"
@@ -12,6 +15,10 @@ inputs:
   ignored_project_keys:
     required: false
     description: "A comma separated list of project keys to not be matched on in a pull request body. (E.g. https://jira.mycompany.com/browse/PROJ-123 - you'd list PROJ in this string"
+  first_ticket_only:
+    required: false
+    description: 'When true - only the first Jira ticket found will be committed to the Pull Request'
+
 runs:
   using: 'node12'
   main: 'dist/index.js'

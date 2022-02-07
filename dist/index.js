@@ -35,9 +35,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const { setFailed, setOutput, getInput } = core;
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+const escapeRegExp = (str) => {
+    // eslint-disable-next-line no-useless-escape
+    return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
+};
 function run() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -49,9 +55,9 @@ function run() {
             const jiraHost = getInput('jira_host');
             // const projectKeys = getInput('project_keys');
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
-            const jiraRegexp = new RegExp(`(?:<jira_ticket>${jiraHost})`, 'gmi');
+            const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
             const matches = jiraRegexp.exec(body);
-            // eslint-disable-next-line no-console
+            console.log({ matches });
             console.log(`${(_a = matches === null || matches === void 0 ? void 0 : matches.groups) === null || _a === void 0 ? void 0 : _a.jira_ticket}`);
             setOutput('time', new Date().toTimeString());
         }
@@ -61,6 +67,7 @@ function run() {
         }
     });
 }
+exports.run = run;
 run();
 
 

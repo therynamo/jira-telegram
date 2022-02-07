@@ -1,0 +1,25 @@
+{
+  "action": "synchronize",
+  "after": "6909742a06f5e3f4c9b289cef2a47c22ece59686",
+  "before": "8c7ba7c94d78663c860249a4a25e6ab3089299c6",
+  "number": 6,
+  "pull_request": {
+    "active_lock_reason": null,
+    "additions": 1,
+    "assignee": null,
+    "assignees": [],
+    "author_association": "OWNER",
+    "auto_merge": null,
+    "body": "Hi there\r\n\r\nhttps://jira.mycompany.com/browse/JIRA-123\nHi there\r\n\r\nhttps://jira.mycompany.com/browse/JIRA-120\nHi there\r\n\r\nhttps://jira.mycompany.com/browse/JIRA-113",
+    "changed_files": 1,
+    "closed_at": null,
+    "comments": 0,
+    "comments_url": "https://api.github.com/repos/therynamo/jira-telegram/issues/6/comments",
+    "commits": 2,
+    "commits_url": "https://api.github.com/repos/therynamo/jira-telegram/pulls/6/commits",
+    "created_at": "2022-02-06T21:40:36Z",
+    "deletions": 1,
+    "diff_url": "https://github.com/therynamo/jira-telegram/pull/6.diff",
+    "draft": false
+  }
+}
