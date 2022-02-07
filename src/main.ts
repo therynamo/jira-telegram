@@ -101,9 +101,13 @@ export async function run(): Promise<void> {
         if (!hasCommittedAlready) {
           // Sleep so the API has some time to catch up in case there are multiple commits
           core.info(`Sleeping 1 second ${ticketId}`);
+          const now = new Date();
 
           await sleep(3000);
 
+          const then = new Date();
+
+          core.info(`Time slept ${(then.getTime() - now.getTime()) / 1000}s`);
           core.info(`Creating emtpy commit ${ticketId}`);
 
           try {

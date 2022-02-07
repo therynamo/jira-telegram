@@ -155,7 +155,10 @@ function run() {
                 if (!hasCommittedAlready) {
                     // Sleep so the API has some time to catch up in case there are multiple commits
                     core.info(`Sleeping 1 second ${ticketId}`);
+                    const now = new Date();
                     yield sleep(3000);
+                    const then = new Date();
+                    core.info(`Time slept ${(then.getTime() - now.getTime()) / 1000}s`);
                     core.info(`Creating emtpy commit ${ticketId}`);
                     try {
                         yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${ticketId} [actions skip]`) !== null && _e !== void 0 ? _e : '[actions skip]', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
