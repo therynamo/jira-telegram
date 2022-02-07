@@ -100,7 +100,9 @@ export async function run(): Promise<void> {
 
         if (!hasCommittedAlready) {
           // Sleep so the API has some time to catch up in case there are multiple commits
-          await sleep(500);
+          core.info('Sleeping 1 second');
+          await sleep(1000);
+          core.info('Creating emtpy commit');
           await createEmptyCommitWithMessage({
             ...context.repo,
             message: `${ticketId} [actions skip]` ?? '[actions skip]',
