@@ -38,14 +38,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
-const { setFailed, setOutput, getInput } = core;
+const { setFailed, getInput } = core;
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
 const escapeRegExp = (str) => {
     // eslint-disable-next-line no-useless-escape
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 function run() {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -53,13 +53,39 @@ function run() {
                 setFailed('This action only works on pull requests');
             }
             const jiraHost = getInput('jira_host');
+            const ingoredKeysInput = getInput('ignored_project_keys');
+            const projectKeysInput = getInput('ignored_project_keys');
+            const projectKeys = projectKeysInput.split(',');
+            const ignoredKeys = ingoredKeysInput.split(',');
+            const token = getInput('github_token');
+            const octoKit = (0, github_1.getOctokit)(token);
             // const projectKeys = getInput('project_keys');
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
             const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
-            const matches = jiraRegexp.exec(body);
-            console.log({ matches });
-            console.log(`${(_a = matches === null || matches === void 0 ? void 0 : matches.groups) === null || _a === void 0 ? void 0 : _a.jira_ticket}`);
-            setOutput('time', new Date().toTimeString());
+            const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {
+                var _a, _b;
+                // Reset last index since we're looping and we don't
+                // want to waste cycles re-initializing the regex for
+                // every element.
+                jiraRegexp.lastIndex = 0;
+                return (_b = (_a = jiraRegexp.exec(match)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.ticket_id;
+            });
+            let filteredTicketIds = ticketIds;
+            if (ignoredKeys.length && projectKeys.length) {
+                setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
+                return;
+            }
+            if (ignoredKeys.length) {
+                filteredTicketIds = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
+            }
+            if (projectKeys.length) {
+                filteredTicketIds = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)));
+            }
+            if (!(filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length)) {
+                core.info('No tickets were found. Exiting gracefully...');
+                return;
+            }
+            octoKit.rest.git.createCommit(Object.assign(Object.assign({}, github_1.context.repo), { message: (_b = filteredTicketIds[0]) !== null && _b !== void 0 ? _b : '', tree: github_1.context.sha }));
         }
         catch (error) {
             if (error instanceof Error)

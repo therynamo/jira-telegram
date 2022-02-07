@@ -43,7 +43,7 @@
     "@typescript-eslint/require-array-sort-compare": "error",
     "@typescript-eslint/restrict-plus-operands": "error",
     "semi": "off",
-    "prettier/prettier": ["error", { "semi": true, "bracketSpacing": true, "printWidth": 150, "trailingComma": "all", "arrowParens": "off" }],
+    "prettier/prettier": ["error", { "semi": true, "bracketSpacing": true, "printWidth": 150, "trailingComma": "all", "arrowParens": "always" }],
     "@typescript-eslint/semi": ["error"],
     "@typescript-eslint/type-annotation-spacing": "error",
     "@typescript-eslint/unbound-method": "error"
