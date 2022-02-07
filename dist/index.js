@@ -24,11 +24,13 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         repo,
         ref: `refs/heads/${branch}`,
     });
+    console.log({ newBranchRef });
     const currentCommit = yield octokit.rest.git.getCommit({
         owner,
         repo,
         commit_sha: (_b = (_a = newBranchRef === null || newBranchRef === void 0 ? void 0 : newBranchRef.data) === null || _a === void 0 ? void 0 : _a.object) === null || _b === void 0 ? void 0 : _b.sha,
     });
+    console.log({ currentCommit });
     const newCommit = yield octokit.rest.git.createCommit({
         owner,
         repo,
@@ -36,6 +38,7 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         tree: (_d = (_c = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _c === void 0 ? void 0 : _c.tree) === null || _d === void 0 ? void 0 : _d.sha,
         parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
     });
+    console.log({ newCommit });
     yield octokit.rest.git.updateRef({
         owner,
         repo,
