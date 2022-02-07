@@ -1,5 +1,8 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
+// @ts-expect-error no types for this package
+import emptyGitHubCommit from 'make-empty-github-commit';
+
 const { setFailed, getInput } = core;
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
@@ -23,6 +26,8 @@ export async function run(): Promise<void> {
     const ignoredKeys = ingoredKeysInput.split(',');
 
     const token = getInput('github_token');
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const octoKit = getOctokit(token);
 
     // const projectKeys = getInput('project_keys');
@@ -63,15 +68,11 @@ export async function run(): Promise<void> {
       return;
     }
 
-    const { data: tree } = await octoKit.rest.git.getTree({
+    emptyGitHubCommit({
       ...context.repo,
-      tree_sha: pull_request?.head?.sha,
-    });
-
-    await octoKit.rest.git.createCommit({
-      ...context.repo,
-      message: filteredTicketIds[0] ?? '',
-      tree: tree.sha,
+      token,
+      message: filteredTicketIds[0],
+      branch: pull_request?.head?.ref,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
