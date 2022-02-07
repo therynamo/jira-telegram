@@ -91,7 +91,7 @@ function run() {
                 core.info('No tickets were found. Exiting gracefully...');
                 return;
             }
-            (0, make_empty_github_commit_1.default)(Object.assign(Object.assign({}, github_1.context.repo), { token, message: filteredTicketIds[0], branch: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _b === void 0 ? void 0 : _b.ref }));
+            yield (0, make_empty_github_commit_1.default)(Object.assign(Object.assign({}, github_1.context.repo), { token, message: filteredTicketIds[0], branch: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _b === void 0 ? void 0 : _b.ref }));
         }
         catch (error) {
             if (error instanceof Error)

@@ -68,7 +68,7 @@ export async function run(): Promise<void> {
       return;
     }
 
-    emptyGitHubCommit({
+    await emptyGitHubCommit({
       ...context.repo,
       token,
       message: filteredTicketIds[0],
