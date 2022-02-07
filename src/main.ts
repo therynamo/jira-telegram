@@ -63,10 +63,15 @@ export async function run(): Promise<void> {
       return;
     }
 
+    const tree = await octoKit.rest.git.getTree({
+      ...context.repo,
+      tree_sha: context.payload?.after,
+    });
+
     await octoKit.rest.git.createCommit({
       ...context.repo,
       message: filteredTicketIds[0] ?? '',
-      tree: context.sha,
+      tree: tree.data.sha,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
