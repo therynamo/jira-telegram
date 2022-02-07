@@ -66,7 +66,7 @@ export async function run(): Promise<void> {
     await octoKit.rest.git.createCommit({
       ...context.repo,
       message: filteredTicketIds[0] ?? '',
-      tree: context.payload?.before,
+      tree: context.sha,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
