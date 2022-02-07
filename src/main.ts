@@ -94,8 +94,6 @@ export async function run(): Promise<void> {
       });
     }
 
-    core.info(`${JSON.stringify(commits, null, 2)}`);
-
     await Promise.all(
       filteredTicketIds.map(async (ticketId) => {
         const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
@@ -104,7 +102,7 @@ export async function run(): Promise<void> {
           // Sleep so the API has some time to catch up in case there are multiple commits
           core.info(`Sleeping 1 second ${ticketId}`);
 
-          await sleep(1000);
+          await sleep(3000);
 
           core.info(`Creating emtpy commit ${ticketId}`);
 
