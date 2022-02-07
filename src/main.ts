@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
-// @ts-expect-error no types for this package
-import emptyGitHubCommit from 'make-empty-github-commit';
+import { createEmptyCommitWithMessage } from './empty-commit';
 
 const { setFailed, getInput } = core;
 
@@ -27,7 +26,6 @@ export async function run(): Promise<void> {
 
     const token = getInput('github_token');
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const octoKit = getOctokit(token);
 
     // const projectKeys = getInput('project_keys');
@@ -68,11 +66,11 @@ export async function run(): Promise<void> {
       return;
     }
 
-    await emptyGitHubCommit({
+    await createEmptyCommitWithMessage({
       ...context.repo,
-      token,
-      message: filteredTicketIds[0],
+      message: filteredTicketIds[0] ?? '',
       branch: pull_request?.head?.ref,
+      octokit: octoKit,
     });
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
