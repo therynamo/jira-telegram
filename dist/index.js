@@ -107,12 +107,11 @@ function run() {
             const jiraHost = getInput('jira_host');
             const firstTicketOnly = getInput('first_ticket_only');
             const ingoredKeysInput = getInput('ignored_project_keys');
-            const projectKeysInput = getInput('ignored_project_keys');
+            const projectKeysInput = getInput('project_keys');
             const projectKeys = projectKeysInput.split(',');
             const ignoredKeys = ingoredKeysInput.split(',');
             const token = getInput('github_token');
             const octoKit = (0, github_1.getOctokit)(token);
-            // const projectKeys = getInput('project_keys');
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
             const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
             const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {

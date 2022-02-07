@@ -24,7 +24,7 @@ export async function run(): Promise<void> {
     const jiraHost = getInput('jira_host');
     const firstTicketOnly = getInput('first_ticket_only');
     const ingoredKeysInput = getInput('ignored_project_keys');
-    const projectKeysInput = getInput('ignored_project_keys');
+    const projectKeysInput = getInput('project_keys');
 
     const projectKeys = projectKeysInput.split(',');
     const ignoredKeys = ingoredKeysInput.split(',');
@@ -32,8 +32,6 @@ export async function run(): Promise<void> {
     const token = getInput('github_token');
 
     const octoKit = getOctokit(token);
-
-    // const projectKeys = getInput('project_keys');
 
     const { body = '' } = pull_request ?? {};
 
