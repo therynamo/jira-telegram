@@ -1,13 +1,17 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { createEmptyCommitWithMessage } from './empty-commit';
-
+import { uniq } from 'lodash';
 const { setFailed, getInput } = core;
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
 const escapeRegExp = (str: string) => {
   // eslint-disable-next-line no-useless-escape
   return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
+};
+
+const sleep = async (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 export async function run(): Promise<void> {
@@ -67,6 +71,8 @@ export async function run(): Promise<void> {
       return;
     }
 
+    filteredTicketIds = uniq(filteredTicketIds);
+
     const { data: commits } = await octoKit.rest.pulls.listCommits({
       ...context.repo,
       pull_number: pull_request?.number ?? 0,
@@ -92,9 +98,11 @@ export async function run(): Promise<void> {
 
     await Promise.all(
       filteredTicketIds.map(async (ticketId) => {
-        const hasCommittedAlready = commits?.some((commit) => commit.commit.message.includes(ticketId ?? ''));
+        const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
 
         if (!hasCommittedAlready) {
+          // Sleep so the API has some time to catch up in case there are multiple commits
+          await sleep(500);
           await createEmptyCommitWithMessage({
             ...context.repo,
             message: ticketId ?? '',
