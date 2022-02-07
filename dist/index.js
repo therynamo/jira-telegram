@@ -71,10 +71,10 @@ function run() {
                 return (_b = (_a = jiraRegexp.exec(match)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.ticket_id;
             });
             let filteredTicketIds = ticketIds;
-            if (!!ignoredKeys.length && !!projectKeys.length) {
-                setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
-                return;
-            }
+            // if (!!ignoredKeys.length && !!projectKeys.length) {
+            //   setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
+            //   return;
+            // }
             if (ignoredKeys.length) {
                 filteredTicketIds = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
             }
