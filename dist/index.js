@@ -167,7 +167,12 @@ function run() {
             });
             for (let i = 0; i < filteredTicketIds.length; i++) {
                 const isLastMessage = i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1;
-                yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
+                try {
+                    yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
+                }
+                catch (error) {
+                    console.log({ error });
+                }
                 console.log({ i });
             }
         }
