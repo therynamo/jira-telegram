@@ -16,9 +16,6 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     ref: `heads/${branch}`,
   });
 
-  console.log({ currentRef: newBranchRef.data?.object?.sha });
-  console.log({ newRef });
-
   const currentCommit = await octokit.rest.git.getCommit({
     owner,
     repo,
@@ -39,8 +36,6 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     ref: `heads/${branch}`,
     sha: newCommit.data.sha,
   });
-
-  console.log({ hello: updatedRef.data });
 
   return updatedRef.data.object.sha;
 };

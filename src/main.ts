@@ -67,12 +67,12 @@ export async function run(): Promise<void> {
 
     filteredTicketIds = uniq(filteredTicketIds);
 
-    const { data: commits } = await octoKit.rest.pulls.listCommits({
-      ...context.repo,
-      pull_number: pull_request?.number ?? 0,
-    });
-
     if (firstTicketOnly) {
+      const { data: commits } = await octoKit.rest.pulls.listCommits({
+        ...context.repo,
+        pull_number: pull_request?.number ?? 0,
+      });
+
       const hasCommittedAlready = commits?.some((commit) => {
         return filteredTicketIds?.includes(commit.commit.message);
       });
@@ -93,6 +93,11 @@ export async function run(): Promise<void> {
     let newRef = '';
 
     const batchedCommit = async ({ ticketId, isLastMessage }: { ticketId: string; isLastMessage: boolean }) => {
+      const { data: commits } = await octoKit.rest.pulls.listCommits({
+        ...context.repo,
+        pull_number: pull_request?.number ?? 0,
+      });
+
       const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
 
       if (!hasCommittedAlready) {
@@ -106,7 +111,6 @@ export async function run(): Promise<void> {
           });
           newRef = ref;
         } catch (error) {
-          core.error(':sad:');
           setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
         }
       }
@@ -119,7 +123,6 @@ export async function run(): Promise<void> {
       } catch (error) {
         console.log({ error });
       }
-      console.log({ i });
     }
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
