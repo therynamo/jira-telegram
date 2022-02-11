@@ -97,8 +97,17 @@ const escapeRegExp = (str) => {
 const sleep = (ms) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve) => setTimeout(resolve, ms));
 });
+const hasCommitted = ({ octokit, pull_number, ticketId }) => __awaiter(void 0, void 0, void 0, function* () {
+    const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number }));
+    const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId); });
+    console.log({
+        commits: commits.map((c) => c.commit.message),
+        hasCommittedAlready,
+    });
+    return hasCommittedAlready;
+});
 function run() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -112,7 +121,7 @@ function run() {
             const projectKeys = projectKeysInput.split(',');
             const ignoredKeys = ingoredKeysInput.split(',');
             const token = getInput('github_token');
-            const octoKit = (0, github_1.getOctokit)(token);
+            const octokit = (0, github_1.getOctokit)(token);
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
             const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
             const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {
@@ -140,25 +149,21 @@ function run() {
             }
             filteredTicketIds = (0, lodash_1.uniq)(filteredTicketIds);
             if (firstTicketOnly) {
-                const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0 }));
-                const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
-                    return filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.includes(commit.commit.message);
-                });
+                const hasCommittedAlready = yield hasCommitted({ octokit, pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0, ticketId: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '' });
                 if (hasCommittedAlready) {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]}`) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_d = `${filteredTicketIds[0]}`) !== null && _d !== void 0 ? _d : '', branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit }));
             }
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
-                var _f, _g;
-                const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _f !== void 0 ? _f : 0 }));
-                const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
-                console.log({ hasCommittedAlready, commits: commits.map((com) => com.commit.message), ticketId });
+                var _g, _h;
+                const hasCommittedAlready = yield hasCommitted({ pull_number: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _g !== void 0 ? _g : 0, octokit, ticketId });
                 if (!hasCommittedAlready) {
                     try {
-                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _g === void 0 ? void 0 : _g.ref, octokit: octoKit, newRef }));
+                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_h = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _h === void 0 ? void 0 : _h.ref, octokit,
+                            newRef }));
                         newRef = ref;
                     }
                     catch (error) {
@@ -167,7 +172,7 @@ function run() {
                 }
             });
             for (let i = 0; i < filteredTicketIds.length; i++) {
-                const isLastMessage = i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1;
+                const isLastMessage = i !== ((_f = filteredTicketIds) === null || _f === void 0 ? void 0 : _f.length) - 1;
                 try {
                     yield sleep(2000);
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });

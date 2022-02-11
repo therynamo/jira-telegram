@@ -14,6 +14,28 @@ const sleep = async (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+interface HasCommittedProps {
+  octokit: ReturnType<typeof getOctokit>;
+  pull_number: number;
+  ticketId: string;
+}
+
+const hasCommitted = async ({ octokit, pull_number, ticketId }: HasCommittedProps) => {
+  const { data: commits } = await octokit.rest.pulls.listCommits({
+    ...context.repo,
+    pull_number,
+  });
+
+  const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId));
+
+  console.log({
+    commits: commits.map((c) => c.commit.message),
+    hasCommittedAlready,
+  });
+
+  return hasCommittedAlready;
+};
+
 export async function run(): Promise<void> {
   try {
     const { pull_request } = context.payload;
@@ -31,7 +53,7 @@ export async function run(): Promise<void> {
 
     const token = getInput('github_token');
 
-    const octoKit = getOctokit(token);
+    const octokit = getOctokit(token);
 
     const { body = '' } = pull_request ?? {};
 
@@ -72,14 +94,7 @@ export async function run(): Promise<void> {
     filteredTicketIds = uniq(filteredTicketIds);
 
     if (firstTicketOnly) {
-      const { data: commits } = await octoKit.rest.pulls.listCommits({
-        ...context.repo,
-        pull_number: pull_request?.number ?? 0,
-      });
-
-      const hasCommittedAlready = commits?.some((commit) => {
-        return filteredTicketIds?.includes(commit.commit.message);
-      });
+      const hasCommittedAlready = await hasCommitted({ octokit, pull_number: pull_request?.number ?? 0, ticketId: filteredTicketIds[0] ?? '' });
 
       if (hasCommittedAlready) {
         core.info('Telegram has already been sent - skipping commit.');
@@ -90,20 +105,14 @@ export async function run(): Promise<void> {
         ...context.repo,
         message: `${filteredTicketIds[0]}` ?? '',
         branch: pull_request?.head?.ref,
-        octokit: octoKit,
+        octokit,
       });
     }
 
     let newRef = '';
 
     const batchedCommit = async ({ ticketId, isLastMessage }: { ticketId: string; isLastMessage: boolean }) => {
-      const { data: commits } = await octoKit.rest.pulls.listCommits({
-        ...context.repo,
-        pull_number: pull_request?.number ?? 0,
-      });
-
-      const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
-      console.log({ hasCommittedAlready, commits: commits.map((com) => com.commit.message), ticketId });
+      const hasCommittedAlready = await hasCommitted({ pull_number: pull_request?.number ?? 0, octokit, ticketId });
 
       if (!hasCommittedAlready) {
         try {
@@ -111,7 +120,7 @@ export async function run(): Promise<void> {
             ...context.repo,
             message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`,
             branch: pull_request?.head?.ref,
-            octokit: octoKit,
+            octokit,
             newRef,
           });
           newRef = ref;
