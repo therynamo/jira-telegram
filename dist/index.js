@@ -87,8 +87,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
-/* eslint-disable @typescript-eslint/promise-function-async */
-/* eslint-disable github/no-then */
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const empty_commit_1 = __nccwpck_require__(1170);
@@ -100,7 +98,7 @@ const escapeRegExp = (str) => {
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 function run() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -154,11 +152,11 @@ function run() {
             }
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
-                var _e;
+                var _f;
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
                 if (!hasCommittedAlready) {
                     try {
-                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit: octoKit, newRef }));
+                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit, newRef }));
                         newRef = ref;
                     }
                     catch (error) {
@@ -167,11 +165,11 @@ function run() {
                     }
                 }
             });
-            filteredTicketIds.reduce((acc, ticketId, i) => __awaiter(this, void 0, void 0, function* () {
-                var _f;
-                const isLastMessage = i !== ((_f = filteredTicketIds) === null || _f === void 0 ? void 0 : _f.length) - 1;
-                acc.then(() => batchedCommit({ ticketId, isLastMessage }));
-            }), Promise.resolve());
+            for (let i = 0; i < filteredTicketIds.length; i++) {
+                const isLastMessage = i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1;
+                yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
+                console.log({ i });
+            }
         }
         catch (error) {
             if (error instanceof Error)

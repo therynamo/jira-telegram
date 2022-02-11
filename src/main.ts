@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/promise-function-async */
-/* eslint-disable github/no-then */
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { createEmptyCommitWithMessage } from './empty-commit';
@@ -114,10 +112,11 @@ export async function run(): Promise<void> {
       }
     };
 
-    (filteredTicketIds as string[]).reduce<Promise<void>>(async (acc, ticketId, i) => {
+    for (let i = 0; i < filteredTicketIds.length; i++) {
       const isLastMessage = i !== (filteredTicketIds as string[])?.length - 1;
-      acc.then(() => batchedCommit({ ticketId, isLastMessage }));
-    }, Promise.resolve());
+      await batchedCommit({ ticketId: (filteredTicketIds as string[])[i], isLastMessage });
+      console.log({ i });
+    }
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
   }
