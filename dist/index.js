@@ -155,6 +155,7 @@ function run() {
                 var _f, _g;
                 const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _f !== void 0 ? _f : 0 }));
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
+                console.log({ hasCommittedAlready, commits, ticketId });
                 if (!hasCommittedAlready) {
                     try {
                         const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _g === void 0 ? void 0 : _g.ref, octokit: octoKit, newRef }));
