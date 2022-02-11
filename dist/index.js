@@ -17,26 +17,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createEmptyCommitWithMessage = void 0;
-const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message, newRef }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g;
     const newBranchRef = yield octokit.rest.git.getRef({
         owner,
         repo,
         ref: `heads/${branch}`,
     });
-    console.log({ newBranchRef: newBranchRef.data });
+    console.log({ currentRef: (_b = (_a = newBranchRef.data) === null || _a === void 0 ? void 0 : _a.object) === null || _b === void 0 ? void 0 : _b.sha });
+    console.log({ newRef });
     const currentCommit = yield octokit.rest.git.getCommit({
         owner,
         repo,
-        commit_sha: (_b = (_a = newBranchRef === null || newBranchRef === void 0 ? void 0 : newBranchRef.data) === null || _a === void 0 ? void 0 : _a.object) === null || _b === void 0 ? void 0 : _b.sha,
+        commit_sha: newRef || ((_d = (_c = newBranchRef === null || newBranchRef === void 0 ? void 0 : newBranchRef.data) === null || _c === void 0 ? void 0 : _c.object) === null || _d === void 0 ? void 0 : _d.sha),
     });
     console.log({ currentCommit: currentCommit.data });
     const newCommit = yield octokit.rest.git.createCommit({
         owner,
         repo,
         message,
-        tree: (_d = (_c = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _c === void 0 ? void 0 : _c.tree) === null || _d === void 0 ? void 0 : _d.sha,
-        parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
+        tree: (_f = (_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.tree) === null || _f === void 0 ? void 0 : _f.sha,
+        parents: [(_g = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _g === void 0 ? void 0 : _g.sha],
     });
     console.log({ newCommit: newCommit.data });
     const updatedRef = yield octokit.rest.git.updateRef({
@@ -150,12 +151,14 @@ function run() {
                 }
                 yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]}`) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
             }
+            let newRef = '';
             filteredTicketIds.reduce((acc, ticketId, i) => __awaiter(this, void 0, void 0, function* () {
                 var _e, _f;
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
                 if (!hasCommittedAlready) {
                     try {
-                        yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1 ? '[actions skip]' : ''}`, branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
+                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1 ? '[actions skip]' : ''}`, branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit, newRef }));
+                        newRef = ref;
                     }
                     catch (error) {
                         core.error(':sad:');
