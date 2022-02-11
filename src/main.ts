@@ -103,7 +103,7 @@ export async function run(): Promise<void> {
       });
 
       const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
-      console.log({ hasCommittedAlready, commits, ticketId });
+      console.log({ hasCommittedAlready, commits: commits.map((com) => com.commit.message), ticketId });
 
       if (!hasCommittedAlready) {
         try {
