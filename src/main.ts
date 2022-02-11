@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/promise-function-async */
+/* eslint-disable github/no-then */
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { createEmptyCommitWithMessage } from './empty-commit';
@@ -92,14 +94,14 @@ export async function run(): Promise<void> {
 
     let newRef = '';
 
-    filteredTicketIds.reduce<Promise<void>>(async (acc, ticketId, i) => {
+    const batchedCommit = async ({ ticketId, isLastMessage }: { ticketId: string; isLastMessage: boolean }) => {
       const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
 
       if (!hasCommittedAlready) {
         try {
           const ref = await createEmptyCommitWithMessage({
             ...context.repo,
-            message: `${ticketId} ${i !== (filteredTicketIds as string[])?.length - 1 ? '[actions skip]' : ''}`,
+            message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`,
             branch: pull_request?.head?.ref,
             octokit: octoKit,
             newRef,
@@ -110,6 +112,11 @@ export async function run(): Promise<void> {
           setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
         }
       }
+    };
+
+    (filteredTicketIds as string[]).reduce<Promise<void>>(async (acc, ticketId, i) => {
+      const isLastMessage = i !== (filteredTicketIds as string[])?.length - 1;
+      acc.then(() => batchedCommit({ ticketId, isLastMessage }));
     }, Promise.resolve());
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
