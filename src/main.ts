@@ -24,6 +24,7 @@ const hasCommitted = async ({ octokit, pull_number, ticketId }: HasCommittedProp
   const { data: commits } = await octokit.rest.pulls.listCommits({
     ...context.repo,
     pull_number,
+    per_page: 100,
   });
 
   const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId));

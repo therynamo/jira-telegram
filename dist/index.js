@@ -98,7 +98,7 @@ const sleep = (ms) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve) => setTimeout(resolve, ms));
 });
 const hasCommitted = ({ octokit, pull_number, ticketId }) => __awaiter(void 0, void 0, void 0, function* () {
-    const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number }));
+    const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number, per_page: 100 }));
     const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId); });
     console.log({
         commits: commits.map((c) => c.commit.message),
