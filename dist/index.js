@@ -85,13 +85,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -105,8 +98,7 @@ const escapeRegExp = (str) => {
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 function run() {
-    var e_1, _a;
-    var _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -123,7 +115,7 @@ function run() {
             const octoKit = (0, github_1.getOctokit)(token);
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
             const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
-            const ticketIds = (_b = body.match(jiraRegexp)) === null || _b === void 0 ? void 0 : _b.map((match) => {
+            const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {
                 var _a, _b;
                 // Reset last index since we're looping and we don't
                 // want to waste cycles re-initializing the regex for
@@ -147,7 +139,7 @@ function run() {
                 return;
             }
             filteredTicketIds = (0, lodash_1.uniq)(filteredTicketIds);
-            const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_c = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _c !== void 0 ? _c : 0 }));
+            const { data: commits } = yield octoKit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0 }));
             if (firstTicketOnly) {
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
                     return filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.includes(commit.commit.message);
@@ -156,31 +148,21 @@ function run() {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_d = `${filteredTicketIds[0]}`) !== null && _d !== void 0 ? _d : '', branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit: octoKit }));
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]}`) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
             }
-            let count = 0;
-            try {
-                for (var filteredTicketIds_1 = __asyncValues(filteredTicketIds), filteredTicketIds_1_1; filteredTicketIds_1_1 = yield filteredTicketIds_1.next(), !filteredTicketIds_1_1.done;) {
-                    const ticketId = filteredTicketIds_1_1.value;
-                    count++;
-                    const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
-                    if (!hasCommittedAlready) {
-                        try {
-                            yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${count !== (filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length) - 1 ? '[actions skip]' : ''}`, branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
-                        }
-                        catch (error) {
-                            setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
-                        }
+            filteredTicketIds.reduce((acc, ticketId, i) => __awaiter(this, void 0, void 0, function* () {
+                var _e, _f;
+                const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
+                if (!hasCommittedAlready) {
+                    try {
+                        yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1 ? '[actions skip]' : ''}`, branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
+                    }
+                    catch (error) {
+                        core.error(':sad:');
+                        setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
                     }
                 }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (filteredTicketIds_1_1 && !filteredTicketIds_1_1.done && (_a = filteredTicketIds_1.return)) yield _a.call(filteredTicketIds_1);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
+            }), Promise.resolve());
         }
         catch (error) {
             if (error instanceof Error)
