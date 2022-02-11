@@ -10,10 +10,6 @@ const escapeRegExp = (str: string) => {
   return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
 
-const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
 interface HasCommittedProps {
   octokit: ReturnType<typeof getOctokit>;
   pull_number: number;
@@ -134,7 +130,6 @@ export async function run(): Promise<void> {
     for (let i = 0; i < filteredTicketIds.length; i++) {
       const isLastMessage = i !== (filteredTicketIds as string[])?.length - 1;
       try {
-        await sleep(2000);
         await batchedCommit({ ticketId: (filteredTicketIds as string[])[i], isLastMessage });
       } catch (error) {
         console.log({ error });

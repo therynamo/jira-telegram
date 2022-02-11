@@ -94,9 +94,6 @@ const escapeRegExp = (str) => {
     // eslint-disable-next-line no-useless-escape
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
-const sleep = (ms) => __awaiter(void 0, void 0, void 0, function* () {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-});
 const hasCommitted = ({ octokit, pull_number, ticketId }) => __awaiter(void 0, void 0, void 0, function* () {
     const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number, per_page: 100 }));
     const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId); });
@@ -174,7 +171,6 @@ function run() {
             for (let i = 0; i < filteredTicketIds.length; i++) {
                 const isLastMessage = i !== ((_f = filteredTicketIds) === null || _f === void 0 ? void 0 : _f.length) - 1;
                 try {
-                    yield sleep(2000);
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
                 }
                 catch (error) {
