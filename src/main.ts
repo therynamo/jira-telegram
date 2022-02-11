@@ -84,24 +84,28 @@ export async function run(): Promise<void> {
 
       await createEmptyCommitWithMessage({
         ...context.repo,
-        message: `${filteredTicketIds[0]} [actions skip]` ?? '[actions skip]',
+        message: `${filteredTicketIds[0]}` ?? '',
         branch: pull_request?.head?.ref,
         octokit: octoKit,
       });
     }
 
+    let newRef: string;
+
     await Promise.all(
-      filteredTicketIds.map(async (ticketId) => {
+      filteredTicketIds.map(async (ticketId, i) => {
         const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId ?? ''));
 
         if (!hasCommittedAlready) {
           try {
-            await createEmptyCommitWithMessage({
+            const res = await createEmptyCommitWithMessage({
               ...context.repo,
-              message: `${ticketId} [actions skip]` ?? '[actions skip]',
+              message: `${ticketId} ${i !== filteredTicketIds?.length ? '[actions skip]' : ''}`,
               branch: pull_request?.head?.ref,
               octokit: octoKit,
+              newRef,
             });
+            newRef = res.data.ref;
           } catch (error) {
             setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
           }

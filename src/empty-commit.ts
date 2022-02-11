@@ -6,9 +6,11 @@ type Props = {
   branch: string;
   message: string;
   octokit: ReturnType<typeof getOctokit>;
+  newRef?: string;
 };
 
-export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branch, message }: Props) => {
+export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branch, message, newRef }: Props) => {
+  console.log({ newRef });
   const newBranchRef = await octokit.rest.git.getRef({
     owner,
     repo,
@@ -29,7 +31,7 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
     parents: [currentCommit?.data?.sha],
   });
 
-  await octokit.rest.git.updateRef({
+  return await octokit.rest.git.updateRef({
     owner,
     repo,
     ref: `heads/${branch}`,

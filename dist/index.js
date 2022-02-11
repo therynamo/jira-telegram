@@ -17,8 +17,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createEmptyCommitWithMessage = void 0;
-const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message }) => __awaiter(void 0, void 0, void 0, function* () {
+const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message, newRef }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
+    console.log({ newRef });
     const newBranchRef = yield octokit.rest.git.getRef({
         owner,
         repo,
@@ -36,7 +37,7 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         tree: (_d = (_c = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _c === void 0 ? void 0 : _c.tree) === null || _d === void 0 ? void 0 : _d.sha,
         parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
     });
-    yield octokit.rest.git.updateRef({
+    return yield octokit.rest.git.updateRef({
         owner,
         repo,
         ref: `heads/${branch}`,
@@ -145,14 +146,16 @@ function run() {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]} [actions skip]`) !== null && _c !== void 0 ? _c : '[actions skip]', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_c = `${filteredTicketIds[0]}`) !== null && _c !== void 0 ? _c : '', branch: (_d = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _d === void 0 ? void 0 : _d.ref, octokit: octoKit }));
             }
-            yield Promise.all(filteredTicketIds.map((ticketId) => __awaiter(this, void 0, void 0, function* () {
-                var _e, _f;
+            let newRef;
+            yield Promise.all(filteredTicketIds.map((ticketId, i) => __awaiter(this, void 0, void 0, function* () {
+                var _e;
                 const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => { var _a, _b; return (_b = (_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.includes(ticketId !== null && ticketId !== void 0 ? ticketId : ''); });
                 if (!hasCommittedAlready) {
                     try {
-                        yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${ticketId} [actions skip]`) !== null && _e !== void 0 ? _e : '[actions skip]', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit: octoKit }));
+                        const res = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${i !== (filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length) ? '[actions skip]' : ''}`, branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit: octoKit, newRef }));
+                        newRef = res.data.ref;
                     }
                     catch (error) {
                         setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
