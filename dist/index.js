@@ -94,6 +94,9 @@ const escapeRegExp = (str) => {
     // eslint-disable-next-line no-useless-escape
     return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
 };
+const sleep = (ms) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+});
 function run() {
     var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
@@ -165,6 +168,7 @@ function run() {
             for (let i = 0; i < filteredTicketIds.length; i++) {
                 const isLastMessage = i !== ((_e = filteredTicketIds) === null || _e === void 0 ? void 0 : _e.length) - 1;
                 try {
+                    yield sleep(2000);
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
                 }
                 catch (error) {
