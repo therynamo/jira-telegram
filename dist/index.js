@@ -39,13 +39,13 @@ const createEmptyCommitWithMessage = ({ octokit, owner, repo, branch, message })
         parents: [(_e = currentCommit === null || currentCommit === void 0 ? void 0 : currentCommit.data) === null || _e === void 0 ? void 0 : _e.sha],
     });
     console.log({ newCommit: newCommit.data });
-    yield octokit.rest.git.updateRef({
+    const updatedRef = yield octokit.rest.git.updateRef({
         owner,
         repo,
         ref: `heads/${branch}`,
         sha: newCommit.data.sha,
-        force: true,
     });
+    console.log({ updatedRef: updatedRef.data });
 });
 exports.createEmptyCommitWithMessage = createEmptyCommitWithMessage;
 

@@ -35,11 +35,12 @@ export const createEmptyCommitWithMessage = async ({ octokit, owner, repo, branc
 
   console.log({ newCommit: newCommit.data });
 
-  await octokit.rest.git.updateRef({
+  const updatedRef = await octokit.rest.git.updateRef({
     owner,
     repo,
     ref: `heads/${branch}`,
     sha: newCommit.data.sha,
-    force: true,
   });
+
+  console.log({ updatedRef: updatedRef.data });
 };
