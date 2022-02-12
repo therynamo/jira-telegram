@@ -90,8 +90,9 @@ const utils_1 = __nccwpck_require__(918);
 const empty_commit_1 = __nccwpck_require__(1170);
 const lodash_1 = __nccwpck_require__(250);
 const { setFailed, getInput } = core;
+const COMMENT_REGEX = /(?:<!--\s.?telegram\s.?-->)(?<content>[\S\s.]*?)(?:<!--\s.?end telegram\s.?-->)/gim;
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -102,13 +103,18 @@ function run() {
             const firstTicketOnly = getInput('first_ticket_only');
             const ingoredKeysInput = getInput('ignored_project_keys');
             const projectKeysInput = getInput('project_keys');
-            const projectKeys = projectKeysInput.split(',');
-            const ignoredKeys = ingoredKeysInput.split(',');
+            const usePrCommentBlocks = getInput('use_pr_comment_blocks');
+            const projectKeys = projectKeysInput.trim().split(',');
+            const ignoredKeys = ingoredKeysInput.trim().split(',');
             const token = getInput('github_token');
             const octokit = (0, github_1.getOctokit)(token);
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
+            let content = body !== null && body !== void 0 ? body : '';
+            if (usePrCommentBlocks) {
+                content = (_c = (_b = (_a = COMMENT_REGEX.exec(body)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.content) !== null && _c !== void 0 ? _c : '';
+            }
             const jiraRegexp = new RegExp(`(?:${(0, utils_1.escapeRegExp)('[')}|${(0, utils_1.escapeRegExp)(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${(0, utils_1.escapeRegExp)(']')}?`, 'gmi');
-            const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {
+            const ticketIds = (_d = content.match(jiraRegexp)) === null || _d === void 0 ? void 0 : _d.map((match) => {
                 var _a, _b;
                 // Reset last index since we're looping and we don't
                 // want to waste cycles re-initializing the regex for
@@ -121,7 +127,7 @@ function run() {
                 filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
             }
             if (projectKeys.length) {
-                filteredTicketIds = (_b = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)))) !== null && _b !== void 0 ? _b : [];
+                filteredTicketIds = (_e = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)))) !== null && _e !== void 0 ? _e : [];
             }
             if (!(filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length)) {
                 core.info('No tickets were found. Exiting gracefully...');
@@ -131,23 +137,23 @@ function run() {
             if (firstTicketOnly) {
                 const hasCommittedAlready = yield (0, utils_1.hasCommitted)({
                     octokit,
-                    pull_number: (_c = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _c !== void 0 ? _c : 0,
-                    ticketId: (_d = filteredTicketIds[0]) !== null && _d !== void 0 ? _d : '',
+                    pull_number: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _f !== void 0 ? _f : 0,
+                    ticketId: (_g = filteredTicketIds[0]) !== null && _g !== void 0 ? _g : '',
                     context: github_1.context,
                 });
                 if (hasCommittedAlready) {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${filteredTicketIds[0]}`) !== null && _e !== void 0 ? _e : '', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit }));
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_h = `${filteredTicketIds[0]}`) !== null && _h !== void 0 ? _h : '', branch: (_j = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _j === void 0 ? void 0 : _j.ref, octokit }));
             }
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
-                var _h, _j;
-                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({ pull_number: (_h = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _h !== void 0 ? _h : 0, octokit, ticketId, context: github_1.context });
+                var _l, _m;
+                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({ pull_number: (_l = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _l !== void 0 ? _l : 0, octokit, ticketId, context: github_1.context });
                 if (!hasCommittedAlready) {
                     try {
-                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_j = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _j === void 0 ? void 0 : _j.ref, octokit,
+                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_m = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _m === void 0 ? void 0 : _m.ref, octokit,
                             newRef }));
                         newRef = ref;
                     }
@@ -157,7 +163,7 @@ function run() {
                 }
             });
             for (let i = 0; i < filteredTicketIds.length; i++) {
-                const isLastMessage = i !== ((_g = filteredTicketIds) === null || _g === void 0 ? void 0 : _g.length) - 1;
+                const isLastMessage = i !== ((_k = filteredTicketIds) === null || _k === void 0 ? void 0 : _k.length) - 1;
                 try {
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
                 }
