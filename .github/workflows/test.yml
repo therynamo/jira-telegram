@@ -1,11 +1,6 @@
 name: 'build-test'
 on: # rebuild any PRs and main branch changes
-  pull_request:
-  push:
-    branches:
-      - main
-      - 'releases/*'
-
+  - pull_request
 jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
@@ -23,3 +18,4 @@ jobs:
         with:
           jira_host: https://jira.mycompany.com
           github_token: ${{secrets.GH_TOKEN}}
+          use_pr_comment_blocks: true

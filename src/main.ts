@@ -6,6 +6,8 @@ import { uniq } from 'lodash';
 
 const { setFailed, getInput } = core;
 
+const COMMENT_REGEX = /(?:<!--\s.?telegram\s.?-->)(?<content>[\S\s.]*?)(?:<!--\s.?end telegram\s.?-->)/gim;
+
 export async function run(): Promise<void> {
   try {
     const { pull_request } = context.payload;
@@ -17,9 +19,10 @@ export async function run(): Promise<void> {
     const firstTicketOnly = getInput('first_ticket_only');
     const ingoredKeysInput = getInput('ignored_project_keys');
     const projectKeysInput = getInput('project_keys');
+    const usePrCommentBlocks = getInput('use_pr_comment_blocks');
 
-    const projectKeys = projectKeysInput.split(',');
-    const ignoredKeys = ingoredKeysInput.split(',');
+    const projectKeys = projectKeysInput.trim().split(',');
+    const ignoredKeys = ingoredKeysInput.trim().split(',');
 
     const token = getInput('github_token');
 
@@ -27,12 +30,18 @@ export async function run(): Promise<void> {
 
     const { body = '' } = pull_request ?? {};
 
+    let content = body ?? '';
+
+    if (usePrCommentBlocks) {
+      content = COMMENT_REGEX.exec(body)?.groups?.content ?? '';
+    }
+
     const jiraRegexp = new RegExp(
       `(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`,
       'gmi',
     );
 
-    const ticketIds = body.match(jiraRegexp)?.map((match) => {
+    const ticketIds = content.match(jiraRegexp)?.map((match) => {
       // Reset last index since we're looping and we don't
       // want to waste cycles re-initializing the regex for
       // every element.
