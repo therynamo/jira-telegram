@@ -91,7 +91,7 @@ const empty_commit_1 = __nccwpck_require__(1170);
 const lodash_1 = __nccwpck_require__(250);
 const { setFailed, getInput } = core;
 function run() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { pull_request } = github_1.context.payload;
@@ -116,12 +116,12 @@ function run() {
                 jiraRegexp.lastIndex = 0;
                 return (_b = (_a = jiraRegexp.exec(match)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.ticket_id;
             });
-            let filteredTicketIds = ticketIds;
+            let filteredTicketIds = ticketIds !== null && ticketIds !== void 0 ? ticketIds : [];
             if (ignoredKeys.length) {
                 filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
             }
             if (projectKeys.length) {
-                filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)));
+                filteredTicketIds = (_b = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)))) !== null && _b !== void 0 ? _b : [];
             }
             if (!(filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length)) {
                 core.info('No tickets were found. Exiting gracefully...');
@@ -131,23 +131,23 @@ function run() {
             if (firstTicketOnly) {
                 const hasCommittedAlready = yield (0, utils_1.hasCommitted)({
                     octokit,
-                    pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0,
-                    ticketId: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '',
+                    pull_number: (_c = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _c !== void 0 ? _c : 0,
+                    ticketId: (_d = filteredTicketIds[0]) !== null && _d !== void 0 ? _d : '',
                     context: github_1.context,
                 });
                 if (hasCommittedAlready) {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_d = `${filteredTicketIds[0]}`) !== null && _d !== void 0 ? _d : '', branch: (_e = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _e === void 0 ? void 0 : _e.ref, octokit }));
+                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_e = `${filteredTicketIds[0]}`) !== null && _e !== void 0 ? _e : '', branch: (_f = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _f === void 0 ? void 0 : _f.ref, octokit }));
             }
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
-                var _g, _h;
-                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({ pull_number: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _g !== void 0 ? _g : 0, octokit, ticketId, context: github_1.context });
+                var _h, _j;
+                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({ pull_number: (_h = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _h !== void 0 ? _h : 0, octokit, ticketId, context: github_1.context });
                 if (!hasCommittedAlready) {
                     try {
-                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_h = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _h === void 0 ? void 0 : _h.ref, octokit,
+                        const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_j = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _j === void 0 ? void 0 : _j.ref, octokit,
                             newRef }));
                         newRef = ref;
                     }
@@ -157,7 +157,7 @@ function run() {
                 }
             });
             for (let i = 0; i < filteredTicketIds.length; i++) {
-                const isLastMessage = i !== ((_f = filteredTicketIds) === null || _f === void 0 ? void 0 : _f.length) - 1;
+                const isLastMessage = i !== ((_g = filteredTicketIds) === null || _g === void 0 ? void 0 : _g.length) - 1;
                 try {
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
                 }

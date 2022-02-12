@@ -41,14 +41,14 @@ export async function run(): Promise<void> {
       return jiraRegexp.exec(match)?.groups?.ticket_id;
     });
 
-    let filteredTicketIds = ticketIds;
+    let filteredTicketIds = ticketIds ?? [];
 
     if (ignoredKeys.length) {
       filteredTicketIds = filteredTicketIds?.filter((ticket) => !ignoredKeys.some((ignore) => ticket?.includes(ignore)));
     }
 
     if (projectKeys.length) {
-      filteredTicketIds = filteredTicketIds?.filter((ticket) => projectKeys.some((projectKey) => ticket?.includes(projectKey)));
+      filteredTicketIds = ticketIds?.filter((ticket) => projectKeys.some((projectKey) => ticket?.includes(projectKey))) ?? [];
     }
 
     if (!filteredTicketIds?.length) {
