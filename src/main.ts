@@ -23,11 +23,16 @@ const hasCommitted = async ({ octokit, pull_number, ticketId }: HasCommittedProp
     per_page: 100,
   });
 
-  const hasCommittedAlready = commits?.some((commit) => commit?.commit?.message?.includes(ticketId));
+  const commitRegex = new RegExp(`${ticketId}([^\\w]|$)`, 'gm');
+
+  const hasCommittedAlready = commits?.some((commit) => {
+    return commitRegex.test(commit?.commit?.message);
+  });
 
   console.log({
     commits: commits.map((c) => c.commit.message),
     hasCommittedAlready,
+    ticketId,
   });
 
   return hasCommittedAlready;
