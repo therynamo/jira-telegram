@@ -18,6 +18,9 @@ inputs:
   first_ticket_only:
     required: false
     description: 'When true - only the first Jira ticket found will be committed to the Pull Request'
+  use_pr_comment_blocks:
+    required: false
+    description: 'When true - Jira Telegram will only pick up tickets inside of the telegram comment blocks'
 
 runs:
   using: 'node12'
