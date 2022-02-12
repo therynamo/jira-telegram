@@ -1,6 +1,7 @@
 name: 'Jira Telegram'
 description: 'Link Jira tickets without compromising Pull Request Titles.'
 author: 'therynamo'
+icon: briefcase
 inputs:
   github_token:
     required: true
