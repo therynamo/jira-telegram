@@ -2,7 +2,13 @@
 
 The missing messenger for Jira's [github automation integrations](https://support.atlassian.com/jira-software-cloud/docs/reference-issues-in-your-development-work/).
 
-Currently, Jira integrations do not support `Pull Request Body` as a valid option for Jira Automations.
+Tired of trying to remember how to link a ticket in github so its picked up by Jira automation flows? Use Jira Telegram to link them instead!
+
+## The missing link
+
+Currently, Jira integrations do not support the `Pull Request Body` as a valid option for picking up tickets to use with Jira Automations.
+
+From their [documentation](https://support.atlassian.com/jira-software-cloud/docs/reference-issues-in-your-development-work/):
 
 > ### Pull requests
 >
@@ -16,26 +22,92 @@ Currently, Jira integrations do not support `Pull Request Body` as a valid optio
 
 There is one option - `pull request body` that is missing from this list. This action serves to rectify that issue!
 
-## Why?
+## How
+
+A lot of `Pull Request Templates` have an area for `## Issue You are Working on Goes Here` - where a link to the ticket your working on would go. _This should be enough for Jira to link the PR to the issue_. This action uses that link to then push an empty commit back to the pull request with a commit message of the Jira ticket ID. Based on the [reference rules](https://support.atlassian.com/jira-software-cloud/docs/reference-issues-in-your-development-work/) this should be enough for any PR to be linked to Jira's automation flows.
+
+Kick back - grab a coffee - and watch your issues automatically resolve themselves like magic!
+
+## Inputs
+
+- `github_token`:
+  - **required**: true
+  - description: _'Authorized github token to read and write to pull requests'_
+- `jira_host`:
+  - **required**: true
+  - description: _"Hostname for where your team's Jira instance is hosted"_
+  - default: 'https://jira.mycompany.com'
+- `project_keys`:
+  - **required**: false
+  - description: _"A comma separated list of project keys to be matched on in a pull request body. (E.g. https://jira.mycompany.com/browse/PROJ-123 - you'd list PROJ in this string"_
+- `ignored_project_keys`:
+  - **required**: false
+  - description: _"A comma separated list of project keys to not be matched on in a pull request body. (E.g. https://jira.mycompany.com/browse/PROJ-123 - you'd list PROJ in this string"_
+- `first_ticket_only`:
+  - **required**: false
+  - description: _'When true - only the first Jira ticket found will be committed to the Pull Request'_
+- `use_pr_comment_blocks`:
+  - **required**: false
+  - description: _'When true - Jira Telegram will only pick up tickets inside of the telegram comment blocks'_
+
+### Examples
+
+```yml
+jobs:
+  # ...
+  send-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jira-telegram
+        with:
+          jira_host: https://jira.mycompany.com
+          github_token: ${{secrets.GH_TOKEN}}
+          project_keys: 'JIRA,PROJ,OPROJ'
+          ignore_project_keys: 'BACK,WACK'
+          first_ticket_only: true
+          use_pr_comment_blocks: true
+  # ...
+```
+
+### Using Telegram Comment Blocks
+
+**Note**: _defaults to `false`_
+
+If your team frequently lists related issues in pull request bodies - and you don't want those picked up - you can add this comment block to your pull request template:
+
+```md
+_Tickets here will be ignored_
+
+https://jira.mycompany.com/browse/JIRA-789
+
+<!-- telegram -->
+
+**Tickets here will be read**
+
+https://jira.mycompany.com/browse/JIRA-123
+
+<!-- end telegram -->
+
+_Tickets here will be ignored_
+
+https://jira.mycompany.com/browse/JIRA-456
+```
+
+Anything placed in between the `telegram` and `end telegram` comment blocks will be read - everything else will be ignored.
+
+## More Benefits of this approach
 
 While Jira and Github are both fantastic tools in their own right, ticket numbers themselves are not. What is meant by that is `MYPROJ-123` tells one nothing about the contents of what is being worked on - it simply just states "there is a ticket" for this pull request.
 
-> Yes yes, but why are we talking about this?
-
-There is a finite, and rather small, amount of space to help others reviewing code to see what a pull request contains at a glance. Take the two following pr title examples:
+There is a finite, and rather small, amount of space to help others see what a pull request contains at a glance. Take the two following pr title examples:
 
 - fix: fix for JIRA-123
 - fix: bug in header component
 
 If you're an engineer, you know that reviewing PRs take time, energy, and effort. Being able to decern quickly, and at a glance, what PRs you may be able to contribute to could end up saving you just enough time to be able to review one more PR (or go grab that coffee you've been dying for since this morning).
 
-And that is the problem this action intends to solve.
-
-Most `Pull Request Templates` have an area for `## Issue You are Working on Goes Here` - where a link to the ticket your working on would go. _This should be enough for Jira to link the PR to the issue_. This action uses that link to then push an empty commit back to the pull request with a commit message of the Jira ticket ID. Based on the [reference rules](https://support.atlassian.com/jira-software-cloud/docs/reference-issues-in-your-development-work/) this should be enough for any PR to be linked to Jira's automation flows.
-
-Voila - PR titles, branches, and commit names can all go back to their normal descriptive selves.
-
-Kick back - grab a coffee - and watch your issues automatically resolve themselves like magic!
+Plug in Jira Telegram and voila - PR titles, branches, and commit names can all go back to their normal descriptive selves.
 
 ## Contributing
 
@@ -73,7 +145,7 @@ Actions are run from GitHub repos so we will checkin the packed dist folder.
 Then run [ncc](https://github.com/zeit/ncc) and push the results:
 
 ```bash
-$ npm run package
+$ yarn run package
 $ git add dist
 $ git commit -a -m "prod dependencies"
 $ git push origin releases/v1
