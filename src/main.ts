@@ -1,42 +1,10 @@
 import * as core from '@actions/core';
 import { context, getOctokit } from '@actions/github';
+import { escapeRegExp, hasCommitted } from './utils';
 import { createEmptyCommitWithMessage } from './empty-commit';
 import { uniq } from 'lodash';
+
 const { setFailed, getInput } = core;
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-const escapeRegExp = (str: string) => {
-  // eslint-disable-next-line no-useless-escape
-  return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
-};
-
-interface HasCommittedProps {
-  octokit: ReturnType<typeof getOctokit>;
-  pull_number: number;
-  ticketId: string;
-}
-
-const hasCommitted = async ({ octokit, pull_number, ticketId }: HasCommittedProps) => {
-  const { data: commits } = await octokit.rest.pulls.listCommits({
-    ...context.repo,
-    pull_number,
-    per_page: 100,
-  });
-
-  const commitRegex = new RegExp(`${ticketId}([^\\w]|$)`, 'gm');
-
-  const hasCommittedAlready = commits?.some((commit) => {
-    return commitRegex.test(commit?.commit?.message);
-  });
-
-  console.log({
-    commits: commits.map((c) => c.commit.message),
-    hasCommittedAlready,
-    ticketId,
-  });
-
-  return hasCommittedAlready;
-};
 
 export async function run(): Promise<void> {
   try {
@@ -75,17 +43,12 @@ export async function run(): Promise<void> {
 
     let filteredTicketIds = ticketIds;
 
-    // if (!!ignoredKeys.length && !!projectKeys.length) {
-    //   setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
-    //   return;
-    // }
-
     if (ignoredKeys.length) {
-      filteredTicketIds = ticketIds?.filter((ticket) => !ignoredKeys.some((ignore) => ticket?.includes(ignore)));
+      filteredTicketIds = filteredTicketIds?.filter((ticket) => !ignoredKeys.some((ignore) => ticket?.includes(ignore)));
     }
 
     if (projectKeys.length) {
-      filteredTicketIds = ticketIds?.filter((ticket) => projectKeys.some((projectKey) => ticket?.includes(projectKey)));
+      filteredTicketIds = filteredTicketIds?.filter((ticket) => projectKeys.some((projectKey) => ticket?.includes(projectKey)));
     }
 
     if (!filteredTicketIds?.length) {
@@ -96,7 +59,12 @@ export async function run(): Promise<void> {
     filteredTicketIds = uniq(filteredTicketIds);
 
     if (firstTicketOnly) {
-      const hasCommittedAlready = await hasCommitted({ octokit, pull_number: pull_request?.number ?? 0, ticketId: filteredTicketIds[0] ?? '' });
+      const hasCommittedAlready = await hasCommitted({
+        octokit,
+        pull_number: pull_request?.number ?? 0,
+        ticketId: filteredTicketIds[0] ?? '',
+        context,
+      });
 
       if (hasCommittedAlready) {
         core.info('Telegram has already been sent - skipping commit.');
@@ -114,7 +82,7 @@ export async function run(): Promise<void> {
     let newRef = '';
 
     const batchedCommit = async ({ ticketId, isLastMessage }: { ticketId: string; isLastMessage: boolean }) => {
-      const hasCommittedAlready = await hasCommitted({ pull_number: pull_request?.number ?? 0, octokit, ticketId });
+      const hasCommittedAlready = await hasCommitted({ pull_number: pull_request?.number ?? 0, octokit, ticketId, context });
 
       if (!hasCommittedAlready) {
         try {

@@ -86,28 +86,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
+const utils_1 = __nccwpck_require__(918);
 const empty_commit_1 = __nccwpck_require__(1170);
 const lodash_1 = __nccwpck_require__(250);
 const { setFailed, getInput } = core;
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-const escapeRegExp = (str) => {
-    // eslint-disable-next-line no-useless-escape
-    return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
-};
-const hasCommitted = ({ octokit, pull_number, ticketId }) => __awaiter(void 0, void 0, void 0, function* () {
-    const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, github_1.context.repo), { pull_number, per_page: 100 }));
-    const commitRegex = new RegExp(`${ticketId}([^\\w]|$)`, 'gm');
-    const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
-        var _a;
-        return commitRegex.test((_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message);
-    });
-    console.log({
-        commits: commits.map((c) => c.commit.message),
-        hasCommittedAlready,
-        ticketId,
-    });
-    return hasCommittedAlready;
-});
 function run() {
     var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
@@ -125,7 +107,7 @@ function run() {
             const token = getInput('github_token');
             const octokit = (0, github_1.getOctokit)(token);
             const { body = '' } = pull_request !== null && pull_request !== void 0 ? pull_request : {};
-            const jiraRegexp = new RegExp(`(?:${escapeRegExp('[')}|${escapeRegExp(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${escapeRegExp(']')}?`, 'gmi');
+            const jiraRegexp = new RegExp(`(?:${(0, utils_1.escapeRegExp)('[')}|${(0, utils_1.escapeRegExp)(`${jiraHost}/browse/`)})(?<ticket_id>[[A-Z][A-Z0-9]*-[1-9][0-9]*)${(0, utils_1.escapeRegExp)(']')}?`, 'gmi');
             const ticketIds = (_a = body.match(jiraRegexp)) === null || _a === void 0 ? void 0 : _a.map((match) => {
                 var _a, _b;
                 // Reset last index since we're looping and we don't
@@ -135,15 +117,11 @@ function run() {
                 return (_b = (_a = jiraRegexp.exec(match)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.ticket_id;
             });
             let filteredTicketIds = ticketIds;
-            // if (!!ignoredKeys.length && !!projectKeys.length) {
-            //   setFailed('Choose between `ignored_project_keys` and `project_keys` - using both is not supported');
-            //   return;
-            // }
             if (ignoredKeys.length) {
-                filteredTicketIds = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
+                filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
             }
             if (projectKeys.length) {
-                filteredTicketIds = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)));
+                filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)));
             }
             if (!(filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length)) {
                 core.info('No tickets were found. Exiting gracefully...');
@@ -151,7 +129,12 @@ function run() {
             }
             filteredTicketIds = (0, lodash_1.uniq)(filteredTicketIds);
             if (firstTicketOnly) {
-                const hasCommittedAlready = yield hasCommitted({ octokit, pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0, ticketId: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '' });
+                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({
+                    octokit,
+                    pull_number: (_b = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _b !== void 0 ? _b : 0,
+                    ticketId: (_c = filteredTicketIds[0]) !== null && _c !== void 0 ? _c : '',
+                    context: github_1.context,
+                });
                 if (hasCommittedAlready) {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
@@ -161,7 +144,7 @@ function run() {
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
                 var _g, _h;
-                const hasCommittedAlready = yield hasCommitted({ pull_number: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _g !== void 0 ? _g : 0, octokit, ticketId });
+                const hasCommittedAlready = yield (0, utils_1.hasCommitted)({ pull_number: (_g = pull_request === null || pull_request === void 0 ? void 0 : pull_request.number) !== null && _g !== void 0 ? _g : 0, octokit, ticketId, context: github_1.context });
                 if (!hasCommittedAlready) {
                     try {
                         const ref = yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: `${ticketId} ${isLastMessage ? '[actions skip]' : ''}`, branch: (_h = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _h === void 0 ? void 0 : _h.ref, octokit,
@@ -191,6 +174,42 @@ function run() {
 }
 exports.run = run;
 run();
+
+
+/***/ }),
+
+/***/ 918:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.hasCommitted = exports.escapeRegExp = void 0;
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+const escapeRegExp = (str) => {
+    // eslint-disable-next-line no-useless-escape
+    return str.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&'); // $& means the whole matched string
+};
+exports.escapeRegExp = escapeRegExp;
+const hasCommitted = ({ octokit, pull_number, ticketId, context }) => __awaiter(void 0, void 0, void 0, function* () {
+    const { data: commits } = yield octokit.rest.pulls.listCommits(Object.assign(Object.assign({}, context.repo), { pull_number, per_page: 100 }));
+    const commitRegex = new RegExp(`${ticketId}([^\\w]|$)`, 'gm');
+    const hasCommittedAlready = commits === null || commits === void 0 ? void 0 : commits.some((commit) => {
+        var _a;
+        return commitRegex.test((_a = commit === null || commit === void 0 ? void 0 : commit.commit) === null || _a === void 0 ? void 0 : _a.message);
+    });
+    return hasCommittedAlready;
+});
+exports.hasCommitted = hasCommitted;
 
 
 /***/ }),
@@ -23766,7 +23785,7 @@ exports.implementation = class URLImpl {
 
 
 const conversions = __nccwpck_require__(5871);
-const utils = __nccwpck_require__(276);
+const utils = __nccwpck_require__(918);
 const Impl = __nccwpck_require__(8262);
 
 const impl = utils.implSymbol;
@@ -25283,34 +25302,6 @@ module.exports.parseURL = function (input, options) {
   // We don't handle blobs, so this just delegates:
   return module.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
 };
-
-
-/***/ }),
-
-/***/ 276:
-/***/ ((module) => {
-
-"use strict";
-
-
-module.exports.mixin = function mixin(target, source) {
-  const keys = Object.getOwnPropertyNames(source);
-  for (let i = 0; i < keys.length; ++i) {
-    Object.defineProperty(target, keys[i], Object.getOwnPropertyDescriptor(source, keys[i]));
-  }
-};
-
-module.exports.wrapperSymbol = Symbol("wrapper");
-module.exports.implSymbol = Symbol("impl");
-
-module.exports.wrapperForImpl = function (impl) {
-  return impl[module.exports.wrapperSymbol];
-};
-
-module.exports.implForWrapper = function (wrapper) {
-  return wrapper[module.exports.implSymbol];
-};
-
 
 
 /***/ }),
