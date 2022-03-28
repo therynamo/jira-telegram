@@ -124,9 +124,11 @@ function run() {
             });
             let filteredTicketIds = ticketIds !== null && ticketIds !== void 0 ? ticketIds : [];
             if (ignoredKeys.length) {
+                core.info(`Filtering based on ignored keys input: ${ignoredKeys}`);
                 filteredTicketIds = filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.filter((ticket) => !ignoredKeys.some((ignore) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(ignore)));
             }
             if (projectKeys.length) {
+                core.info(`Filtering based on project keys input: ${projectKeys}`);
                 filteredTicketIds = (_e = ticketIds === null || ticketIds === void 0 ? void 0 : ticketIds.filter((ticket) => projectKeys.some((projectKey) => ticket === null || ticket === void 0 ? void 0 : ticket.includes(projectKey)))) !== null && _e !== void 0 ? _e : [];
             }
             if (!(filteredTicketIds === null || filteredTicketIds === void 0 ? void 0 : filteredTicketIds.length)) {
@@ -145,7 +147,15 @@ function run() {
                     core.info('Telegram has already been sent - skipping commit.');
                     return;
                 }
-                yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_h = `${filteredTicketIds[0]}`) !== null && _h !== void 0 ? _h : '', branch: (_j = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _j === void 0 ? void 0 : _j.ref, octokit }));
+                core.info(`Creating commit for ${filteredTicketIds[0]}`);
+                try {
+                    yield (0, empty_commit_1.createEmptyCommitWithMessage)(Object.assign(Object.assign({}, github_1.context.repo), { message: (_h = `${filteredTicketIds[0]}`) !== null && _h !== void 0 ? _h : '', branch: (_j = pull_request === null || pull_request === void 0 ? void 0 : pull_request.head) === null || _j === void 0 ? void 0 : _j.ref, octokit }));
+                }
+                catch (error) {
+                    core.error(`Failed on ${filteredTicketIds[0]}. Has been committed? ${hasCommittedAlready}: ${error}`);
+                    setFailed(`Failed on ${filteredTicketIds[0]}. Has been committed? ${hasCommittedAlready}: ${error}`);
+                }
+                core.info(`Succeeded in committing for ${filteredTicketIds[0]}`);
             }
             let newRef = '';
             const batchedCommit = ({ ticketId, isLastMessage }) => __awaiter(this, void 0, void 0, function* () {
@@ -158,6 +168,7 @@ function run() {
                         newRef = ref;
                     }
                     catch (error) {
+                        core.error(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
                         setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
                     }
                 }
@@ -165,9 +176,12 @@ function run() {
             for (let i = 0; i < filteredTicketIds.length; i++) {
                 const isLastMessage = i !== ((_k = filteredTicketIds) === null || _k === void 0 ? void 0 : _k.length) - 1;
                 try {
+                    core.info(`Creating commit for ${filteredTicketIds[i]}`);
                     yield batchedCommit({ ticketId: filteredTicketIds[i], isLastMessage });
+                    core.info(`Succeeded in committing for ${filteredTicketIds[i]}`);
                 }
                 catch (error) {
+                    core.info(`Failed in committing for ${filteredTicketIds[i]}`);
                     console.log({ error });
                 }
             }
@@ -175,6 +189,7 @@ function run() {
         catch (error) {
             if (error instanceof Error)
                 setFailed(error.message);
+            core.error(`${error}`);
         }
     });
 }

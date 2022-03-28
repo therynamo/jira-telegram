@@ -53,10 +53,13 @@ export async function run(): Promise<void> {
     let filteredTicketIds = ticketIds ?? [];
 
     if (ignoredKeys.length) {
+      core.info(`Filtering based on ignored keys input: ${ignoredKeys}`);
       filteredTicketIds = filteredTicketIds?.filter((ticket) => !ignoredKeys.some((ignore) => ticket?.includes(ignore)));
     }
 
     if (projectKeys.length) {
+      core.info(`Filtering based on project keys input: ${projectKeys}`);
+
       filteredTicketIds = ticketIds?.filter((ticket) => projectKeys.some((projectKey) => ticket?.includes(projectKey))) ?? [];
     }
 
@@ -80,12 +83,21 @@ export async function run(): Promise<void> {
         return;
       }
 
-      await createEmptyCommitWithMessage({
-        ...context.repo,
-        message: `${filteredTicketIds[0]}` ?? '',
-        branch: pull_request?.head?.ref,
-        octokit,
-      });
+      core.info(`Creating commit for ${filteredTicketIds[0]}`);
+
+      try {
+        await createEmptyCommitWithMessage({
+          ...context.repo,
+          message: `${filteredTicketIds[0]}` ?? '',
+          branch: pull_request?.head?.ref,
+          octokit,
+        });
+      } catch (error) {
+        core.error(`Failed on ${filteredTicketIds[0]}. Has been committed? ${hasCommittedAlready}: ${error}`);
+        setFailed(`Failed on ${filteredTicketIds[0]}. Has been committed? ${hasCommittedAlready}: ${error}`);
+      }
+
+      core.info(`Succeeded in committing for ${filteredTicketIds[0]}`);
     }
 
     let newRef = '';
@@ -104,6 +116,7 @@ export async function run(): Promise<void> {
           });
           newRef = ref;
         } catch (error) {
+          core.error(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
           setFailed(`Failed on ${ticketId} - ${hasCommittedAlready}: ${error}`);
         }
       }
@@ -112,13 +125,20 @@ export async function run(): Promise<void> {
     for (let i = 0; i < filteredTicketIds.length; i++) {
       const isLastMessage = i !== (filteredTicketIds as string[])?.length - 1;
       try {
+        core.info(`Creating commit for ${filteredTicketIds[i]}`);
+
         await batchedCommit({ ticketId: (filteredTicketIds as string[])[i], isLastMessage });
+
+        core.info(`Succeeded in committing for ${filteredTicketIds[i]}`);
       } catch (error) {
+        core.info(`Failed in committing for ${filteredTicketIds[i]}`);
         console.log({ error });
       }
     }
   } catch (error) {
     if (error instanceof Error) setFailed(error.message);
+
+    core.error(`${error}`);
   }
 }
 
